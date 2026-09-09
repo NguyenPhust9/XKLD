@@ -30,13 +30,36 @@ const roadmap = ["Tư vấn & sơ tuyển miễn phí", "Khám sức khỏe", "P
 
 function LeadForm({ compact = false, onSuccess }: { compact?: boolean; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setLoading(true);
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    setLoading(false); event.currentTarget.reset(); onSuccess();
+    event.preventDefault();
+    const form = event.currentTarget;
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = Object.fromEntries(new FormData(form));
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Không thể gửi đăng ký. Vui lòng thử lại.");
+      }
+
+      form.reset();
+      onSuccess();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Không thể gửi đăng ký. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   }
   return <form className={compact ? "lead-form modal-form" : "lead-form"} onSubmit={submit}>
+    {error && <div className="inline-error" role="alert">{error}</div>}
     <div className="form-row"><input required name="name" placeholder="Họ và tên *" /><input required name="phone" type="tel" placeholder="Số điện thoại *" /></div>
     <div className="form-row"><input name="email" type="email" placeholder="Email" /><select required name="gender" defaultValue=""><option value="" disabled>Giới tính *</option><option>Nam</option><option>Nữ</option></select></div>
     <div className="form-row"><select required name="region" defaultValue=""><option value="" disabled>Miền *</option><option>Bắc</option><option>Trung</option><option>Nam</option></select><input required name="birth_year" inputMode="numeric" maxLength={4} placeholder="Năm sinh *" /></div>
