@@ -27,6 +27,17 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Supabase keep-alive
+
+The production deployment includes a daily Vercel Cron request to
+`/api/cron/keep-alive`. The route performs a read-only `select id limit 1`
+against the `leads` table and never inserts, updates, or deletes data.
+
+Set a random `CRON_SECRET` of at least 16 characters in the Vercel project's
+environment variables before deploying. Vercel sends it automatically as a
+Bearer token when invoking the cron route. Keep this value server-side and do
+not prefix it with `NEXT_PUBLIC_`.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
